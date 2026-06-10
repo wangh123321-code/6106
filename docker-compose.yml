@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: tt_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ttadmin
+      MONGO_INITDB_ROOT_PASSWORD: ttsecret2026
+      MONGO_INITDB_DATABASE: tournament
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo/init:/docker-entrypoint-initdb.d
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tt_backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      MONGO_URI: mongodb://ttadmin:ttsecret2026@mongo:27017/tournament?authSource=admin
+      JWT_SECRET: changeme-in-production-32chars!!
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - upload_data:/app/uploads
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tt_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  upload_data:
