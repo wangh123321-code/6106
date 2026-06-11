@@ -32,7 +32,7 @@ db.audit_logs.createIndex({ created_at: -1 });
 
 db.users.insertOne({
   username: "admin",
-  password: "$2a$10$placeholder_hash_for_admin",
+  password: "$2a$10$.Hk/3BRk3JcLNJJU/VJiB.TZp3Z7om575eLTJuz39bXoOVzMTDR82",
   display_name: "系统管理员",
   role: "committee",
   created_at: new Date()

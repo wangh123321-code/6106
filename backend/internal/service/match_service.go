@@ -9,6 +9,7 @@ import (
 	"github.com/tt-tournament/backend/internal/model"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -206,13 +207,13 @@ func (s *MatchService) checkChampion(ctx context.Context, eventID, bracketID str
 	if bracketID == "" {
 		return
 	}
-	matches, _ := s.matchCol.Find(ctx, bson.M{"bracket_id": bracketID, "status": bson.M{"$in": []string{"completed", "walkover"}}}).Count()
-	totalMatches, _ := s.matchCol.Find(ctx, bson.M{"bracket_id": bracketID}).Count()
+	finishedMatches, _ := s.matchCol.CountDocuments(ctx, bson.M{"bracket_id": bracketID, "status": bson.M{"$in": []string{"completed", "walkover"}}})
+	totalMatches, _ := s.matchCol.CountDocuments(ctx, bson.M{"bracket_id": bracketID})
 
-	if matches == totalMatches && totalMatches > 0 {
+	if finishedMatches == totalMatches && totalMatches > 0 {
 		var final model.Match
 		err := s.matchCol.FindOne(ctx, bson.M{
-			"bracket_id": bracketID,
+			"bracket_id":    bracketID,
 			"next_match_id": "",
 		}).Decode(&final)
 		if err == nil && final.WinnerID != "" {

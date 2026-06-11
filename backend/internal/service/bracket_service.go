@@ -130,8 +130,11 @@ func (s *BracketService) Generate(ctx context.Context, eventID string) (*model.B
 		}
 	}
 
+	bracketID := primitive.NewObjectID().Hex()
+
 	for i := range allMatches {
 		m := &allMatches[i]
+		m.BracketID = bracketID
 		if m.Round < numRounds {
 			nextRound := m.Round
 			nextPos := (m.Position - 1) / 2
@@ -155,7 +158,7 @@ func (s *BracketService) Generate(ctx context.Context, eventID string) (*model.B
 	s.propagateWalkovers(ctx, allMatches)
 
 	bracket := model.Bracket{
-		ID:        primitive.NewObjectID().Hex(),
+		ID:        bracketID,
 		EventID:   eventID,
 		CreatedAt: time.Now(),
 	}
