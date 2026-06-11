@@ -40,6 +40,12 @@
     <p>为各场次指派裁判</p>
   </a>
 
+  <a href="/appeals" class="card admin-card">
+    <div class="icon">⚖️</div>
+    <h3>成绩申诉</h3>
+    <p>审核选手提交的成绩申诉</p>
+  </a>
+
   <a href="/audit" class="card admin-card">
     <div class="icon">📝</div>
     <h3>审计日志</h3>

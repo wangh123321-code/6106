@@ -51,16 +51,18 @@ func main() {
 	bracketSvc := service.NewBracketService(db, registrationSvc, eventSvc, userSvc)
 	matchSvc := service.NewMatchService(db, userSvc, bracketSvc)
 	rankingSvc := service.NewRankingService(eventSvc, userSvc)
+	appealSvc := service.NewAppealService(db, matchSvc)
 
 	userH := handler.NewUserHandler(userSvc)
-	tournamentH := handler.NewTournamentHandler(tournamentSvc)
+	tournamentH := handler.NewTournamentHandler(tournamentSvc, appealSvc)
 	eventH := handler.NewEventHandler(eventSvc)
 	registrationH := handler.NewRegistrationHandler(registrationSvc)
 	bracketH := handler.NewBracketHandler(bracketSvc)
 	matchH := handler.NewMatchHandler(matchSvc)
 	rankingH := handler.NewRankingHandler(rankingSvc)
+	appealH := handler.NewAppealHandler(appealSvc)
 
-	r := router.Setup(userH, tournamentH, eventH, registrationH, bracketH, matchH, rankingH)
+	r := router.Setup(userH, tournamentH, eventH, registrationH, bracketH, matchH, rankingH, appealH)
 
 	port := os.Getenv("PORT")
 	if port == "" {

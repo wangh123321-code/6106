@@ -21,6 +21,7 @@ type Tournament struct {
 	Status      string    `bson:"status" json:"status"`
 	CreatedBy   string    `bson:"created_by" json:"created_by"`
 	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
+	PublishedAt time.Time `bson:"published_at,omitempty" json:"published_at,omitempty"`
 }
 
 type Event struct {
@@ -124,4 +125,18 @@ type MedalRanking struct {
 	Silver       int    `bson:"silver" json:"silver"`
 	Bronze       int    `bson:"bronze" json:"bronze"`
 	Total        int    `bson:"total" json:"total"`
+}
+
+type Appeal struct {
+	ID          string    `bson:"_id,omitempty" json:"id"`
+	AppealID    string    `bson:"appeal_id" json:"appeal_id"`
+	MatchID     string    `bson:"match_id" json:"match_id"`
+	AppellantID string    `bson:"appellant_id" json:"appellant_id"`
+	Reason      string    `bson:"reason" json:"reason"`
+	Evidence    string    `bson:"evidence" json:"evidence"`
+	Status      string    `bson:"status" json:"status"`
+	ReviewerID  string    `bson:"reviewer_id,omitempty" json:"reviewer_id,omitempty"`
+	ReviewedAt  time.Time `bson:"reviewed_at,omitempty" json:"reviewed_at,omitempty"`
+	ReviewNote  string    `bson:"review_note,omitempty" json:"review_note,omitempty"`
+	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
 }

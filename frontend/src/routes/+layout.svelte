@@ -24,6 +24,7 @@
     <a href="/" class="nav-brand">🏓 赛事管理</a>
     {#if loggedIn}
       <a href="/tournaments">赛事列表</a>
+      <a href="/appeals">成绩申诉</a>
       {#if user?.role === 'committee'}
         <a href="/admin">管理后台</a>
         <a href="/audit">审计日志</a>

@@ -10,11 +10,12 @@ import (
 )
 
 type TournamentHandler struct {
-	svc *service.TournamentService
+	svc       *service.TournamentService
+	appealSvc *service.AppealService
 }
 
-func NewTournamentHandler(svc *service.TournamentService) *TournamentHandler {
-	return &TournamentHandler{svc: svc}
+func NewTournamentHandler(svc *service.TournamentService, appealSvc *service.AppealService) *TournamentHandler {
+	return &TournamentHandler{svc: svc, appealSvc: appealSvc}
 }
 
 func (h *TournamentHandler) Create(c *gin.Context) {
@@ -76,6 +77,19 @@ func (h *TournamentHandler) UpdateStatus(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
+
+	if req.Status == "completed" {
+		hasPending, err := h.appealSvc.HasPendingAppealsForTournament(c.Request.Context(), id)
+		if err != nil {
+			response.InternalError(c, "检查申诉状态失败")
+			return
+		}
+		if hasPending {
+			response.BadRequest(c, "该赛事存在未处理的申诉，无法回退到 completed 状态")
+			return
+		}
+	}
+
 	err := h.svc.UpdateStatus(c.Request.Context(), id, req.Status)
 	if err != nil {
 		response.InternalError(c, "更新状态失败")

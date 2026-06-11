@@ -36,6 +36,28 @@ type ScoreInput struct {
 	Games   []model.GameScore  `json:"games"`
 }
 
+func (s *MatchService) calculateWinner(match model.Match, games []model.GameScore) (wins1, wins2 int, winnerID string, err error) {
+	for _, g := range games {
+		if g.Score1 > g.Score2 {
+			wins1++
+		} else if g.Score2 > g.Score1 {
+			wins2++
+		}
+	}
+
+	neededWins := (match.BestOf / 2) + 1
+	if wins1 >= neededWins {
+		winnerID = match.Player1ID
+	} else if wins2 >= neededWins {
+		winnerID = match.Player2ID
+	}
+
+	if winnerID == "" {
+		err = fmt.Errorf("比赛尚未决出胜负")
+	}
+	return
+}
+
 func (s *MatchService) RecordScore(ctx context.Context, refereeID string, input ScoreInput) (*model.Match, error) {
 	var match model.Match
 	err := s.matchCol.FindOne(ctx, bson.M{"_id": input.MatchID}).Decode(&match)
@@ -51,36 +73,20 @@ func (s *MatchService) RecordScore(ctx context.Context, refereeID string, input 
 		return nil, fmt.Errorf("该场次已结束")
 	}
 
-	wins1, wins2 := 0, 0
-	for _, g := range input.Games {
-		if g.Score1 > g.Score2 {
-			wins1++
-		} else if g.Score2 > g.Score1 {
-			wins2++
-		}
-	}
-
-	neededWins := (match.BestOf / 2) + 1
-	winnerID := ""
-	if wins1 >= neededWins {
-		winnerID = match.Player1ID
-	} else if wins2 >= neededWins {
-		winnerID = match.Player2ID
-	}
-
-	if winnerID == "" {
-		return nil, fmt.Errorf("比赛尚未决出胜负")
+	wins1, wins2, winnerID, err := s.calculateWinner(match, input.Games)
+	if err != nil {
+		return nil, err
 	}
 
 	now := time.Now()
 	update := bson.M{
 		"$set": bson.M{
-			"games":      input.Games,
-			"score1":     wins1,
-			"score2":     wins2,
-			"winner_id":  winnerID,
-			"status":     "completed",
-			"referee_id": refereeID,
+			"games":       input.Games,
+			"score1":      wins1,
+			"score2":      wins2,
+			"winner_id":   winnerID,
+			"status":      "completed",
+			"referee_id":  refereeID,
 			"finished_at": now,
 		},
 	}
@@ -155,20 +161,50 @@ func (s *MatchService) Walkover(ctx context.Context, matchID, playerID, reason s
 }
 
 func (s *MatchService) OverrideScore(ctx context.Context, operatorID, operatorName, matchID string, input ScoreInput) (*model.Match, error) {
-	var oldMatch model.Match
-	err := s.matchCol.FindOne(ctx, bson.M{"_id": matchID}).Decode(&oldMatch)
+	var match model.Match
+	err := s.matchCol.FindOne(ctx, bson.M{"_id": matchID}).Decode(&match)
 	if err != nil {
 		return nil, fmt.Errorf("比赛不存在")
 	}
 
-	oldJSON, _ := json.Marshal(oldMatch)
+	oldJSON, _ := json.Marshal(match)
 
-	result, err := s.RecordScore(ctx, operatorID, input)
+	wins1, wins2, winnerID, err := s.calculateWinner(match, input.Games)
 	if err != nil {
 		return nil, err
 	}
 
-	newJSON, _ := json.Marshal(result)
+	now := time.Now()
+	update := bson.M{
+		"$set": bson.M{
+			"games":       input.Games,
+			"score1":      wins1,
+			"score2":      wins2,
+			"winner_id":   winnerID,
+			"status":      "completed",
+			"referee_id":  operatorID,
+			"finished_at": now,
+		},
+	}
+	_, err = s.matchCol.UpdateByID(ctx, matchID, update)
+	if err != nil {
+		return nil, err
+	}
+
+	if match.NextMatchID != "" {
+		slot := match.NextSlot
+		_ = s.bracketSvc.advanceWinner(ctx, match.NextMatchID, winnerID, slot)
+	}
+
+	s.checkChampion(ctx, match.EventID, match.BracketID)
+
+	match.Games = input.Games
+	match.Score1 = wins1
+	match.Score2 = wins2
+	match.WinnerID = winnerID
+	match.Status = "completed"
+
+	newJSON, _ := json.Marshal(match)
 	s.auditCol.InsertOne(ctx, model.AuditLog{
 		ID:           primitive.NewObjectID().Hex(),
 		OperatorID:   operatorID,
@@ -181,7 +217,7 @@ func (s *MatchService) OverrideScore(ctx context.Context, operatorID, operatorNa
 		CreatedAt:    time.Now(),
 	})
 
-	return result, nil
+	return &match, nil
 }
 
 func (s *MatchService) GetByID(ctx context.Context, id string) (*model.Match, error) {

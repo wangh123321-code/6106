@@ -70,5 +70,9 @@ func (s *TournamentService) Publish(ctx context.Context, id string) error {
 	if t.Status != "completed" {
 		return fmt.Errorf("赛事尚未完成，无法发布成绩")
 	}
-	return s.UpdateStatus(ctx, id, "published")
+	_, err = s.col.UpdateByID(ctx, id, bson.M{"$set": bson.M{
+		"status":       "published",
+		"published_at": time.Now(),
+	}})
+	return err
 }

@@ -14,6 +14,7 @@ func Setup(
 	bracketH *handler.BracketHandler,
 	matchH *handler.MatchHandler,
 	rankingH *handler.RankingHandler,
+	appealH *handler.AppealHandler,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -35,6 +36,7 @@ func Setup(
 		bracketH.RegisterRoutes(api)
 		matchH.RegisterRoutes(api)
 		rankingH.RegisterRoutes(api)
+		appealH.RegisterRoutes(api)
 	}
 
 	r.GET("/health", func(c *gin.Context) {

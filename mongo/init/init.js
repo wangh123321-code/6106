@@ -7,6 +7,7 @@ db.createCollection("registrations");
 db.createCollection("brackets");
 db.createCollection("matches");
 db.createCollection("audit_logs");
+db.createCollection("appeals");
 
 db.users.createIndex({ username: 1 }, { unique: true });
 db.users.createIndex({ role: 1 });
@@ -29,6 +30,12 @@ db.matches.createIndex({ referee_id: 1 });
 db.audit_logs.createIndex({ operator_id: 1 });
 db.audit_logs.createIndex({ target_type: 1, target_id: 1 });
 db.audit_logs.createIndex({ created_at: -1 });
+
+db.appeals.createIndex({ appeal_id: 1 }, { unique: true });
+db.appeals.createIndex({ match_id: 1 });
+db.appeals.createIndex({ appellant_id: 1 });
+db.appeals.createIndex({ status: 1 });
+db.appeals.createIndex({ created_at: -1 });
 
 db.users.insertOne({
   username: "admin",
