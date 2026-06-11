@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tt-tournament/backend/internal/model"
-
 	"go.mongodb.org/mongo-driver/bson"
 )
 

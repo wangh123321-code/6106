@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/tt-tournament/backend/internal/middleware"
 	"github.com/tt-tournament/backend/internal/service"

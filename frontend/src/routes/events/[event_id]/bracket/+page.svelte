@@ -2,7 +2,7 @@
   import { api, isLoggedIn, getCurrentUser } from '$lib/api';
   import BracketTree from '$lib/components/BracketTree.svelte';
   import { onMount } from 'svelte';
-  import { page } from '$app/navigation';
+  import { page } from '$app/stores';
 
   let bracket = null;
   let matches = [];

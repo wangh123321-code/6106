@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/tt-tournament/backend/internal/middleware"
 	"github.com/tt-tournament/backend/internal/service"
@@ -18,7 +16,7 @@ func NewEventHandler(svc *service.EventService) *EventHandler {
 }
 
 func (h *EventHandler) Create(c *gin.Context) {
-	tournamentID := c.Param("tournament_id")
+	tournamentID := c.Param("id")
 	var req struct {
 		Name       string `json:"name" binding:"required"`
 		Type       string `json:"type" binding:"required,oneof=ms ws xd"`
@@ -39,7 +37,7 @@ func (h *EventHandler) Create(c *gin.Context) {
 }
 
 func (h *EventHandler) List(c *gin.Context) {
-	tournamentID := c.Param("tournament_id")
+	tournamentID := c.Param("id")
 	list, err := h.svc.ListByTournament(c.Request.Context(), tournamentID)
 	if err != nil {
 		response.InternalError(c, "获取项目列表失败")
@@ -61,8 +59,8 @@ func (h *EventHandler) CloseRegistration(c *gin.Context) {
 func (h *EventHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	auth := rg.Group("", middleware.AuthRequired())
 	{
-		auth.POST("/tournaments/:tournament_id/events", middleware.RoleRequired("committee"), h.Create)
-		auth.GET("/tournaments/:tournament_id/events", h.List)
+		auth.POST("/tournaments/:id/events", middleware.RoleRequired("committee"), h.Create)
+		auth.GET("/tournaments/:id/events", h.List)
 		auth.POST("/events/:event_id/close-registration", middleware.RoleRequired("committee"), h.CloseRegistration)
 	}
 }
